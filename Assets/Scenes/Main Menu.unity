@@ -659,7 +659,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneNames:
-  - Single Player Arena
+  - Single Player Lobby
   - Multi Player Lobby
   - Player Build
   - Level Builder

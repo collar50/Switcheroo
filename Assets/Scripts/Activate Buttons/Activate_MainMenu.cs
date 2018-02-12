@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class WheelSelector : MonoBehaviour
+public class Activate_MainMenu : MonoBehaviour
 {
 
 	public string[] sceneNames;
