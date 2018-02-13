@@ -305,9 +305,7 @@ public class Stats : MonoBehaviour
         floatingNum.transform.SetParent(this.transform.GetChild(0), worldPositionStays: false);
         floatingNum.GetComponent<TextFloat>().value = -amount;
         floatingNum.GetComponent<TextFloat>().type = targetedStat;
-		if (Mathf.Abs(amount) >= 20){
-			floatingNum.transform.localScale *=2;
-		}
+
     }
 
 
