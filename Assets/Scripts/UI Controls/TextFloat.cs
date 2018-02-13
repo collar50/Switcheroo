@@ -8,7 +8,6 @@ public class TextFloat : MonoBehaviour
 
     public float xSpeed;
     private float startTime;
-
     private string display;
     public int value;
     public int type;
@@ -25,6 +24,7 @@ public class TextFloat : MonoBehaviour
 
         AdjustTextForValue();
         AdjustTextForType();
+        InitializeXSpeed();
 
         textComp.text = display;
         startTime = Time.time;
@@ -34,10 +34,7 @@ public class TextFloat : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float adjustedTime = Time.time - startTime;
-        float ySpeed = (Mathf.Sqrt(adjustedTime) - 1.1f * adjustedTime) * 50f;
-        this.transform.Translate(new Vector3(xSpeed, ySpeed, 0f) * Time.deltaTime);
-        this.transform.localScale *= (1 - .2f * Time.deltaTime);
+        Move();
     }
 
     IEnumerator DestroyText()
@@ -58,16 +55,36 @@ public class TextFloat : MonoBehaviour
             outline.effectColor = Color.black;
             display = value.ToString();
         }
+
+        if (Mathf.Abs(value) >= 20)
+        {
+            this.transform.localScale *= 1.8f;
+        }
+        else if (Mathf.Abs(value) >= 10)
+        {
+            this.transform.localScale *= 1.4f;
+        }
     }
 
     private void AdjustTextForType()
     {
         textComp.color = typeColors[type];
+    }
 
-        while (Mathf.Abs(xSpeed) < 2f)
+    private void InitializeXSpeed()
+    {
+        while (Mathf.Abs(xSpeed) < 1f)
         {
-            xSpeed = Random.Range(-5f, 5f);
+            xSpeed = Random.Range(-2f, 2f);
         }
+    }
+
+    private void Move()
+    {
+        float adjustedTime = Time.time - startTime;
+        float ySpeed = (Mathf.Sqrt(adjustedTime) - 1.1f * adjustedTime) * 50f;
+        this.transform.Translate(new Vector3(xSpeed, ySpeed, 0f) * Time.deltaTime);
+        this.transform.localScale *= (1 - .2f * Time.deltaTime);
     }
 
 
