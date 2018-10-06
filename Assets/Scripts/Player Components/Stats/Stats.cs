@@ -218,7 +218,7 @@ public class Stats : MonoBehaviour
             if (collision.gameObject.tag.Substring(collision.gameObject.tag.Length - 4, 4) == "Wall")
             {
                 // Do stuff for colliding with wall
-                int statAffected = collision.gameObject.GetComponent<WallManager>().WallID;
+                int statAffected = (int) collision.gameObject.GetComponent<WallManager>().wallType;
                 DecrementCurrentValue(statAffected, -currentWallValue[statAffected]);
             }
         }

@@ -54,3 +54,6 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Player Reflections
+    uniqueID: 1885717301
+    locked: 0

@@ -8,8 +8,8 @@ using UnityEngine.EventSystems;
 public class BuildingBlockListManager : MonoBehaviour
 {
 
-	private BuildingBlock_Storage bbStorage;
-	private BuildingBlock_Creator bbCreator;
+	private BuildingBlockManager buildingBlockManager;
+	private BuildingBlockCreator bbCreator;
 	private GameObject dropdownContent;
 	private RectTransform dropdownContentRect;
 	[SerializeField] Button bbDelButtonPrefab;
@@ -20,8 +20,9 @@ public class BuildingBlockListManager : MonoBehaviour
 
 	private void OnEnable ()
 	{
-		bbStorage = GameObject.Find ("Persistent Data").GetComponent<BuildingBlock_Storage> ();
-		bbCreator = GameObject.Find("UI Manager").GetComponent<BuildingBlock_Creator>();
+        Debug.Log("There is a building block list manager component on: " + this.gameObject.name);
+		buildingBlockManager = GameObject.Find ("Persistent Data").GetComponent<BuildingBlockManager> ();
+		bbCreator = GameObject.Find("UI Manager").GetComponent<BuildingBlockCreator>();
 
 		// "this" is Building Block List gameObject
 		dropdownContent = this.transform.GetChild (0).GetChild (0).gameObject;
@@ -33,7 +34,8 @@ public class BuildingBlockListManager : MonoBehaviour
 	// Use this for initialization
 	private void Update ()
 	{
-		ClampContent ();
+        Debug.Log("There is a building block list manager component on: " + this.gameObject.name);
+        ClampContent ();
 	}
 
 	/*  -> Repopulate the list and dropdown menu with all of the user-created building blocks in bbStorage.
@@ -46,8 +48,8 @@ public class BuildingBlockListManager : MonoBehaviour
 		// Get the number of building blocks and the number of prefabs. The 
 		// number of user generated building blocks will be the first number minus 
 		// the second.
-		int numPrefabs = bbStorage.BuiltInPrefabs.Count;
-		numBB = bbStorage.Names.Count;
+		int numPrefabs = buildingBlockManager.BuiltInPrefabs.Count;
+		numBB = buildingBlockManager.Names.Count;
 		// Instantiate a button for each user-generated building block. Make the button
 		// active, set it's position, set it's name, set it's text, and add it to the list of buttons. 
 		for (int i = numPrefabs; i < numBB; i++) {
@@ -55,7 +57,7 @@ public class BuildingBlockListManager : MonoBehaviour
 			bbButton.gameObject.SetActive (true);
 			bbButton.gameObject.GetComponent<RectTransform> ().anchoredPosition = new Vector2 (0f, 100f - 50f * (i - numPrefabs));
 			bbButton.gameObject.name = "Button" + i.ToString ();
-			bbButton.GetComponentInChildren<Text> ().text = (i + 1 - numPrefabs).ToString () + ") " + bbStorage.Names [i];
+			bbButton.GetComponentInChildren<Text> ().text = (i + 1 - numPrefabs).ToString () + ". " + buildingBlockManager.Names [i];
 			bbDelButtons.Add (bbButton);
 		}
 	}
@@ -85,7 +87,7 @@ public class BuildingBlockListManager : MonoBehaviour
 			int index;
 			Int32.TryParse (bbName.Substring (6, bbName.Length - 6), out index);
 
-			bbStorage.Remove (index);
+			buildingBlockManager.removeBuildingBlock (index);
 			RepopDelBbList ();
 		}
 
@@ -93,7 +95,7 @@ public class BuildingBlockListManager : MonoBehaviour
 		// from when creating a level. I could create an event here, 
 		// and set up a listener in bbCreator
 
-		bbCreator.UpdateBbSelector ();
+		bbCreator.updateBuildingBlockSelectorList ();
 	}
 
 	/*

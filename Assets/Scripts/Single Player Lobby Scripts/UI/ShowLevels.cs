@@ -5,12 +5,12 @@ using UnityEngine.UI;
 
 public class ShowLevels : MonoBehaviour {
 	private Dropdown levelSelector;
-	private Level_Storage level_Storage;
+	private LevelManager level_Storage;
 
 	// Use this for initialization
 	void Start () {
 		levelSelector = this.GetComponent<Dropdown>();
-		level_Storage = GameObject.Find("Persistent Data").GetComponent<Level_Storage>();
+		level_Storage = GameObject.Find("Persistent Data").GetComponent<LevelManager>();
 		levelSelector.ClearOptions();
 		levelSelector.AddOptions(level_Storage.Names);
 	}

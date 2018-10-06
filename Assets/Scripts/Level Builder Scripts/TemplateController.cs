@@ -3,28 +3,68 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using TMPro;
 
 public class TemplateController : MonoBehaviour
 {
     // PUBLICS
-    public bool noSpaceForTemplate = false;
+    public bool mNoSpaceForTemplate = false;
 
     // SHOWN IN INSPECTOR
-    [SerializeField] private Transform currentConstruction;
-    [SerializeField] private Text costIndicator;
+    [SerializeField] private Transform mNewBuildingBlock;
+    [SerializeField] private TMP_Text mCoinCostText;
 
     // PRIVATE OBJECTS	
-    private Dropdown bbSelector;
+    private Dropdown mBuildingBlockSelector;
 
     // PRIVATE COMPONENTS
-    private BuildingBlock_Storage bbStorage;
-    private List<SpriteRenderer> spriteRenderers = new List<SpriteRenderer>();
-    private List<MonoBehaviour> scriptComponents = new List<MonoBehaviour>();
+    private BuildingBlockManager mBuildingBlockManager;
+    private CoinManager mCoinManager;
+    private List<SpriteRenderer> mPieceSpriteRenderers = new List<SpriteRenderer>();
+    private List<MonoBehaviour> mPieceScriptComponents = new List<MonoBehaviour>();
+    
 
     // PRIVATE 
-    private Vector2 mousePosition;
-    private float pingTimeTracker;
-    private int totalCost;
+    private Vector2 mMousePosition;
+    private float mPingTimeTracker;
+    private int mTotalCost;
+    private bool mFire1InUse;
+
+
+
+    /*
+    -> Initialize references
+    -> Initialize template
+ */
+    
+    private void Start()
+    {
+        // UI dropdown used for selecting building blocks
+        if (GameObject.Find("Building Block Selector") != null)
+        {
+            mBuildingBlockSelector = GameObject.Find("Building Block Selector").GetComponent<Dropdown>();
+        }
+
+        if (GameObject.Find("Persistent Data") != null)
+        {
+            mBuildingBlockManager = GameObject.Find("Persistent Data").GetComponent<BuildingBlockManager>();
+            mCoinManager = GameObject.Find("Persistent Data").GetComponent<CoinManager>();
+        }
+
+        updateBuildingBlockSelector();
+        changeTemplate();
+    }
+
+    private void Update()
+    {
+        if (mPieceSpriteRenderers.Count != 0)
+        {
+            moveTemplate();
+            standAloneRotate();
+            standAloneConstructFromTemplate();
+            pingTemplateAlpha();
+        }
+    }
 
     /*
 		-> Get building block by looking at the value chosen
@@ -34,29 +74,39 @@ public class TemplateController : MonoBehaviour
 			equivalent in template with the correct position, 
 			rotation, and tag.
 	 */
-    public void ChangeTemplate()
-    {
-        Clear();
 
-        int bbIndex = bbSelector.value;
-        bool bbExists = bbStorage.Positions[bbIndex] != null;
-        if (bbExists)
+
+    public void changeTemplate()
+    {
+        int lNewBuildingBlockIndex = mBuildingBlockSelector.value;
+        bool lBuildingBlockExists = mBuildingBlockManager.Positions[lNewBuildingBlockIndex] != null;
+        changeTemplate(lNewBuildingBlockIndex, lBuildingBlockExists, mBuildingBlockManager, this.transform.position);
+    }
+
+    private void changeTemplate(int pNewBuildingBlockIndex, bool pBuildingBlockExists, BuildingBlockManager pBuildingBlockManager, Vector3 pTemplatePosition)
+    {
+        clearTemplate();
+
+
+        if (pBuildingBlockExists)
         {
-            for (int i = 0; i < bbStorage.Positions[bbIndex].Count; i++)
+            for (int i = 0; i < pBuildingBlockManager.Positions[pNewBuildingBlockIndex].Count; i++)
             {
-                Vector3 position = bbStorage.Positions[bbIndex][i]
-                                   + transform.position;
-                Quaternion rotation = bbStorage.Rotations[bbIndex][i];
-                string tag = bbStorage.Tags[bbIndex][i];
+                Vector3 lPiecePosition = pBuildingBlockManager.Positions[pNewBuildingBlockIndex][i] + transform.position;
+                Quaternion lPieceRotation = pBuildingBlockManager.Rotations[pNewBuildingBlockIndex][i];
+                string lPieceTag = pBuildingBlockManager.Tags[pNewBuildingBlockIndex][i];
 
                 // create each piece using one of a preset list of prefabs
-                PlacePrefabInTemplate(tag, position, rotation);
+                placePieceInTemplate(lPieceTag, lPiecePosition, lPieceRotation);                
             }
+
+            
         }
+
 
         //   - bbStorage.Positions[bbIndex][0]
 
-        Initialize();
+        initialize();
     }
 
     /*
@@ -65,26 +115,38 @@ public class TemplateController : MonoBehaviour
         -> Set sorting order and color of all sprite renderers
             of all children of the template. 
      */
-    private void Initialize()
+
+    private void initialize()
     {
-        scriptComponents.AddRange(this.gameObject.GetComponentsInChildren<MonoBehaviour>());
-        if (scriptComponents != null)
+        initialize(mPieceScriptComponents, mPieceSpriteRenderers);
+    }
+
+    private void initialize(List<MonoBehaviour> pPieceScriptComponents, List<SpriteRenderer> pPieceSpriteRenderers)
+    {
+        pPieceScriptComponents.AddRange(this.gameObject.GetComponentsInChildren<MonoBehaviour>());
+        if (pPieceScriptComponents != null)
         {
-            foreach (MonoBehaviour m in scriptComponents)
+            foreach (MonoBehaviour lPieceScript in pPieceScriptComponents)
             {
-                Debug.Log(m);
-                if (!(m is CostManager || m is TemplateController))
-                    m.enabled = false;
+                if (!(lPieceScript is CostManager || lPieceScript is TemplateController))
+                {
+                    lPieceScript.enabled = false;
+                }
             }
         }
 
-        spriteRenderers.AddRange(this.gameObject.GetComponentsInChildren<SpriteRenderer>());
-        if (spriteRenderers != null)
+
+        
+        pPieceSpriteRenderers.AddRange(this.gameObject.GetComponentsInChildren<SpriteRenderer>());
+        pPieceSpriteRenderers.RemoveAt(0);
+
+        if (pPieceSpriteRenderers != null)
         {
-            foreach (SpriteRenderer s in spriteRenderers)
+            Color TEMPLATE_PIECE_COLOR = new Color(0, 0, 255, .5f);
+            foreach (SpriteRenderer lPieceSpriteRenderer in pPieceSpriteRenderers)
             {
-                s.sortingOrder = 1;
-                s.color = new Color(0, 0, 255, .5f);
+                lPieceSpriteRenderer.sortingOrder = 1;
+                lPieceSpriteRenderer.color = TEMPLATE_PIECE_COLOR;
             }
         }
     }
@@ -93,42 +155,23 @@ public class TemplateController : MonoBehaviour
         -> Empty lists that depend on children of template
         -> Remove all children from the template. 
      */
-    private void Clear()
+
+    private void clearTemplate()
     {
-        scriptComponents.Clear();
-        spriteRenderers.Clear();
-        foreach (Transform child in this.transform)
+        clearTemplate(mPieceSpriteRenderers, mPieceScriptComponents, this.transform);
+    }
+
+    private void clearTemplate(List<SpriteRenderer> pPieceSpriteRenderers, List<MonoBehaviour> pPieceScriptComponents, Transform pTemplate)
+    {
+        pPieceScriptComponents.Clear();
+        pPieceSpriteRenderers.Clear();
+        foreach (Transform piece in pTemplate)
         {
-            Destroy(child.gameObject);
+            Destroy(piece.gameObject);
         }
     }
 
-    /*
-		-> Initialize references
-		-> Initialize template
-	 */
-    private void Start()
-    {
-        // UI dropdown used for selecting building blocks
-        if (GameObject.Find("Building Block Selector") != null)
-        {
-            bbSelector = GameObject.Find("Building Block Selector").GetComponent<Dropdown>();
-        }
 
-        bbStorage = GameObject.Find("Persistent Data").GetComponent<BuildingBlock_Storage>();
-        Initialize();
-    }
-
-    private void Update()
-    {
-        if (spriteRenderers.Count > 0)
-        {
-            Move();
-            Rotate();
-            //PingAlpha();
-            ConstructFromTemplate();
-        }
-    }
 
     /*
 		-> Make template follow mouse in discrete jumps.
@@ -136,10 +179,21 @@ public class TemplateController : MonoBehaviour
 		-> TODO: Get rid of magic number (4). Should be 
 			a const.
 	*/
-    private void Move()
+
+
+    private void moveTemplate()
     {
-        mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        transform.position = new Vector2(Mathf.Round(mousePosition.x / 4) * 4, Mathf.Round(mousePosition.y / 4) * 4);
+#if UNITY_STANDALONE
+        Vector2 lMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        moveTemplate(lMousePosition);
+#else 
+        this.transform.position = new Vector3(Mathf.Round(Camera.main.transform.position.x) + 2f, Mathf.Round(Camera.main.transform.position.y) + 1f, 0f);
+#endif
+    }
+
+    private void moveTemplate(Vector2 pMousePosition)
+    {
+        this.transform.position = new Vector2(Mathf.Round(pMousePosition.x), Mathf.Round(pMousePosition.y));
     }
 
     /*
@@ -148,85 +202,179 @@ public class TemplateController : MonoBehaviour
 			of the game. 
 		-> NOTE: The pinging effect is achieved using a sine wave. 
 	*/
-    private void PingAlpha()
-    {
-        pingTimeTracker = .6f + Mathf.Sin(Time.time * 8f) * .4f;
 
-        if (spriteRenderers[0] != null)
+    private void pingTemplateAlpha()
+    {
+        pingTemplateAlpha(mPieceSpriteRenderers);
+    }
+
+    private void pingTemplateAlpha(List<SpriteRenderer> pPieceSpriteRenderers)
+    {
+        const float FREQUENCY_MODIFIER = 8f;
+        const float AMPLITUDE = .4f;
+        const float VERTICAL_SHIFT = .6f;
+
+        float lPingTimeTracker = VERTICAL_SHIFT + Mathf.Sin(Time.time * FREQUENCY_MODIFIER) * AMPLITUDE;
+
+
+        //Debug.Log(pPieceSpriteRenderers[0]);
+
+        if (pPieceSpriteRenderers[0] != null)
         {
-            foreach (SpriteRenderer sp in spriteRenderers)
+            foreach (SpriteRenderer lPieceSpriteRenderer in pPieceSpriteRenderers)
             {
-                sp.color = new Color(sp.color.r, sp.color.g, sp.color.b, pingTimeTracker);
+                if (lPieceSpriteRenderer != null)
+                {
+                    lPieceSpriteRenderer.color = new Color(lPieceSpriteRenderer.color.r, lPieceSpriteRenderer.color.g, lPieceSpriteRenderer.color.b, lPingTimeTracker);
+                }
             }
         }
     }
 
     // Rotate the template when right click
-    private void Rotate()
+
+    public void rotate()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse1))
+        const float XY_ROTATION_AMOUNT = 0f;
+        const float Z_ROTATION_AMOUNT = 90f;
+
+        rotate(true, new Vector3(XY_ROTATION_AMOUNT, XY_ROTATION_AMOUNT, Z_ROTATION_AMOUNT));
+    }
+
+    private void standAloneRotate()
+    {
+        const float XY_ROTATION_AMOUNT = 0f;
+        const float Z_ROTATION_AMOUNT = 90f;
+
+#if UNITY_STANDALONE
+        rotate(Input.GetKeyDown(KeyCode.Mouse1), new Vector3(XY_ROTATION_AMOUNT, XY_ROTATION_AMOUNT, Z_ROTATION_AMOUNT));
+#endif
+    }
+
+    private void rotate(bool pRotationTriggered, Vector3 pRotationVector)
+    {
+        const int HORIZONTAL_CHECK = 180;
+        const double EPSILON = 1E-10;
+        const string LONG_WALL_TAG = "LongWall";
+        const string SHORT_WALL_TAG = "ShortWall";
+
+        if (pRotationTriggered)
         {
-            transform.Rotate(new Vector3(0f, 0f, 90f % 360));
+            transform.Rotate(pRotationVector);
+            foreach (Transform child in this.transform)
+            {
+
+                if (Mathf.Abs(child.transform.eulerAngles.z % HORIZONTAL_CHECK) <= EPSILON)
+                {
+                    child.transform.localEulerAngles = -this.transform.localEulerAngles;
+                }
+                else
+                {
+                    child.transform.localEulerAngles = -this.transform.localEulerAngles + pRotationVector;
+                }
+
+                if (child.tag == LONG_WALL_TAG || child.tag == SHORT_WALL_TAG)
+                {
+                    child.GetComponent<WallManager>().setImage();
+                }
+            }
         }
     }
 
+
+    public void constructFromTemplate() {
+        Debug.Log("Should construct");
+        constructFromTemplate(1, mFire1InUse, new Collider2D[900], new ContactFilter2D(), mNewBuildingBlock);
+    }
     // If the mouse is not over a ui element, and if the template is not colliding with objects already in the scene
     // When left click, paste the template into the scene.
-    // If the template is colliding with objects, when left click, erase those objects
+    // If the template is colliding with objects, when left clics, erase those objects
+    private void standAloneConstructFromTemplate()
+    {
+        // Windows
+#if UNITY_STANDALONE
+            constructFromTemplate(Input.GetAxisRaw("Fire1"), mFire1InUse, new Collider2D[900], new ContactFilter2D(), mNewBuildingBlock);
+#endif
 
-    private void ConstructFromTemplate()
+    }
+
+    private void constructFromTemplate(float pFire1, bool pFire1InUse, Collider2D[] pPieceColliders, ContactFilter2D pContactFilter, Transform pNewBuildingBlock)
     {
         // Get the number of colliders that the template overlaps
         // I've set the maximum number of pieces in a building block 
         // to 150. The largest piece is 3x1. 
-        Collider2D[] colliders = new Collider2D[900];
-        ContactFilter2D contactFilter = new ContactFilter2D();
-        int numColliders = Physics2D.OverlapCollider(this.GetComponent<Collider2D>(), contactFilter, colliders);
+        int lNumColliders = Physics2D.OverlapCollider(this.GetComponent<Collider2D>(), pContactFilter, pPieceColliders);
+        bool lNoSpaceForTemplate;
 
         // If the template overlaps with at least 1 collider, then 
         // there is no room to construct from template
-        if (numColliders > 0)
+        if (lNumColliders > 0)
         {
-            noSpaceForTemplate = true;
+            lNoSpaceForTemplate = true;
         }
         else
         {
-            noSpaceForTemplate = false;
+            lNoSpaceForTemplate = false;
         }
 
+        bool pFiring = pFire1 != 0;
+        bool lNoStandAloneProblems = true;
+
+#if UNITY_STANDALONE
+        lNoStandAloneProblems = !mFire1InUse && !checkPointerOverUI();
+#endif
+        
+
+
         // If you left click, and you are not hovering over a UI element, 
-        if (Input.GetKeyDown(KeyCode.Mouse0) && !CheckPointerOverUI())
+        if (pFiring && lNoStandAloneProblems)
         {
-            if (!noSpaceForTemplate)
+            if (!lNoSpaceForTemplate)
             {
+                
+                Color white = new Color(1f, 1f, 1f, 1f);
+                const int PIECE_SORTING_ORDER = 0;
+
+                // Create piece and turn on all monobehaviours. 
                 foreach (Transform child in this.transform)
                 {
                     GameObject clone = (GameObject)Instantiate(child.gameObject, child.position, child.rotation);
-                    clone.transform.parent = GameObject.Find("Current Construction").transform;
-                    clone.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
-                    clone.GetComponent<SpriteRenderer>().sortingOrder = 0;
+                    clone.transform.parent = pNewBuildingBlock;
+                    clone.GetComponent<SpriteRenderer>().color = white;
+                    clone.GetComponent<SpriteRenderer>().sortingOrder = PIECE_SORTING_ORDER;
 
                     foreach(MonoBehaviour m in clone.GetComponents<MonoBehaviour>())
                     {
                         m.enabled = true;
                     }                    
                 }
+
             }
             else
             {
-                foreach (Collider2D c in colliders)
+                foreach (Collider2D c in pPieceColliders)
                 {
-                    if (c != null && c.gameObject.tag != "Container")
+                    const string CONTAINER_TAG = "Container";
+                    if (c != null && c.gameObject.tag != CONTAINER_TAG)
                     {
                         DestroyImmediate(c.gameObject);
                     }
                 }
             }
+            
+            CalcTotalConstructCost();
+            //mFire1InUse = true;
         }
+
+        //amFire1InUse = false;
+
+#if UNITY_STANDALONE
+        mFire1InUse = pFire1 == 0 ? false : true;
+#endif
     }
 
     // Check if mouse is over a ui element
-    private bool CheckPointerOverUI()
+    private bool checkPointerOverUI()
     {
         PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
         eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
@@ -237,33 +385,54 @@ public class TemplateController : MonoBehaviour
 
     private void CalcTotalConstructCost()
     {
-        totalCost = 0;
+        Color32 NOT_ENOUGH_COINS = new Color32(0xFF, 0x6D, 0x6C, 0xFF);
+        Color32 ENOUGH_COINS = new Color32(0x1E,0xA5,0xFF, 0xFF);
 
-        foreach (Transform t in currentConstruction)
+        mTotalCost = 0;
+
+        foreach (Transform t in mNewBuildingBlock)
         {
-            totalCost += t.GetComponent<CostManager>().Cost;
+            mTotalCost += t.GetComponent<CostManager>().Cost;
         }
 
-        costIndicator.text = totalCost.ToString();
+        mCoinCostText.text = string.Format("{0:n0}", mTotalCost); 
+
+        if (mTotalCost > mCoinManager.Coins)
+        {
+            mCoinCostText.color = NOT_ENOUGH_COINS;
+        }
+        else
+        {
+            mCoinCostText.color = ENOUGH_COINS;
+        }
     }
+    
     /*		
-    ->  Use the tag to select and instantiate a built-in 
+        Use the tag to select and instantiate a built-in 
         prefab to create and child to the template. 
- */
-    private void PlacePrefabInTemplate(string tag, Vector3 position, Quaternion rotation)
+    */
+    private void placePieceInTemplate(string tag, Vector3 position, Quaternion rotation)
     {
-        foreach (Transform builtInPrefab in bbStorage.BuiltInPrefabs)
+        foreach (Transform builtInPrefab in mBuildingBlockManager.BuiltInPrefabs)
         {
             // find the right prefab to use
             if (tag == builtInPrefab.tag)
             {
                 // create the piece, set the right position, rotation, and name, and make it 
                 // a child of the template.
+                
                 Transform piece = (Transform)Instantiate(builtInPrefab, position, rotation);
                 piece.parent = this.transform;
                 piece.name = builtInPrefab.name;
+                mPieceSpriteRenderers.Add(piece.GetComponent<SpriteRenderer>());
             }
         }
+    }
+
+    public void updateBuildingBlockSelector()
+    {
+        mBuildingBlockSelector.ClearOptions();
+        mBuildingBlockSelector.AddOptions(mBuildingBlockManager.Names);
     }
 
 }
