@@ -4,8 +4,6 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - LongWall
-  - ShortWall
   - Player1
   - Player2
   - Player3
@@ -17,6 +15,8 @@ TagManager:
   - BombPlayer4
   - BuildingBlockDeleteButton
   - Container
+  - Long Wall
+  - Short Wall
   layers:
   - Default
   - TransparentFX

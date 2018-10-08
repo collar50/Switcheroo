@@ -62,7 +62,7 @@ public class TemplateController : MonoBehaviour
             moveTemplate();
             standAloneRotate();
             standAloneConstructFromTemplate();
-            pingTemplateAlpha();
+            pingAlpha();
         }
     }
 
@@ -87,7 +87,6 @@ public class TemplateController : MonoBehaviour
     {
         clearTemplate();
 
-
         if (pBuildingBlockExists)
         {
             for (int i = 0; i < pBuildingBlockManager.Positions[pNewBuildingBlockIndex].Count; i++)
@@ -97,14 +96,10 @@ public class TemplateController : MonoBehaviour
                 string lPieceTag = pBuildingBlockManager.Tags[pNewBuildingBlockIndex][i];
 
                 // create each piece using one of a preset list of prefabs
-                placePieceInTemplate(lPieceTag, lPiecePosition, lPieceRotation);                
-            }
-
-            
+                placePieceInTemplate(lPieceTag, lPiecePosition, lPieceRotation);             
+            }            
         }
-
-
-        //   - bbStorage.Positions[bbIndex][0]
+        
 
         initialize();
     }
@@ -121,12 +116,18 @@ public class TemplateController : MonoBehaviour
         initialize(mPieceScriptComponents, mPieceSpriteRenderers);
     }
 
-    private void initialize(List<MonoBehaviour> pPieceScriptComponents, List<SpriteRenderer> pPieceSpriteRenderers)
+    private void initialize(List<MonoBehaviour> pPieceScripts, List<SpriteRenderer> pPieceSpriteRenderers)
     {
-        pPieceScriptComponents.AddRange(this.gameObject.GetComponentsInChildren<MonoBehaviour>());
-        if (pPieceScriptComponents != null)
+        disablePieceScripts(pPieceScripts);
+        initializePieceSpriteRenderers(pPieceSpriteRenderers);       
+    }
+
+    private void disablePieceScripts(List<MonoBehaviour> pPieceScripts)
+    {
+        pPieceScripts.AddRange(this.gameObject.GetComponentsInChildren<MonoBehaviour>());
+        if (pPieceScripts != null)
         {
-            foreach (MonoBehaviour lPieceScript in pPieceScriptComponents)
+            foreach (MonoBehaviour lPieceScript in pPieceScripts)
             {
                 if (!(lPieceScript is CostManager || lPieceScript is TemplateController))
                 {
@@ -134,15 +135,16 @@ public class TemplateController : MonoBehaviour
                 }
             }
         }
+    }
 
-
-        
-        pPieceSpriteRenderers.AddRange(this.gameObject.GetComponentsInChildren<SpriteRenderer>());
-        pPieceSpriteRenderers.RemoveAt(0);
+    private void initializePieceSpriteRenderers(List<SpriteRenderer> pPieceSpriteRenderers)
+    {
+        //pPieceSpriteRenderers.AddRange(this.gameObject.GetComponentsInChildren<SpriteRenderer>());
+        //pPieceSpriteRenderers.RemoveAt(0);
 
         if (pPieceSpriteRenderers != null)
         {
-            Color TEMPLATE_PIECE_COLOR = new Color(0, 0, 255, .5f);
+            Color TEMPLATE_PIECE_COLOR = new Color(.1f, .1f, .1f, .5f);
             foreach (SpriteRenderer lPieceSpriteRenderer in pPieceSpriteRenderers)
             {
                 lPieceSpriteRenderer.sortingOrder = 1;
@@ -163,8 +165,9 @@ public class TemplateController : MonoBehaviour
 
     private void clearTemplate(List<SpriteRenderer> pPieceSpriteRenderers, List<MonoBehaviour> pPieceScriptComponents, Transform pTemplate)
     {
-        pPieceScriptComponents.Clear();
-        pPieceSpriteRenderers.Clear();
+        mPieceScriptComponents.Clear();
+        mPieceSpriteRenderers.Clear();
+
         foreach (Transform piece in pTemplate)
         {
             Destroy(piece.gameObject);
@@ -196,43 +199,55 @@ public class TemplateController : MonoBehaviour
         this.transform.position = new Vector2(Mathf.Round(pMousePosition.x), Mathf.Round(pMousePosition.y));
     }
 
-    /*
+    /**
 		-> Change alpha of all children sprites of the template
 			according to how much time has elapsed since the start
 			of the game. 
 		-> NOTE: The pinging effect is achieved using a sine wave. 
 	*/
 
-    private void pingTemplateAlpha()
+    private void pingAlpha()
     {
-        pingTemplateAlpha(mPieceSpriteRenderers);
+        pingAlpha(mPieceSpriteRenderers);
     }
 
-    private void pingTemplateAlpha(List<SpriteRenderer> pPieceSpriteRenderers)
+    private void pingAlpha(List<SpriteRenderer> pPieceSpriteRenderers)
+    {
+        float lPingTimeTracker = getAlpha();
+        
+        if (pPieceSpriteRenderers.Count > 0)
+        {
+            foreach (SpriteRenderer lPieceSpriteRenderer in pPieceSpriteRenderers)
+            {
+                Color currentColor = new Color(lPieceSpriteRenderer.color.r, lPieceSpriteRenderer.color.g, lPieceSpriteRenderer.color.b, lPingTimeTracker);
+                lPieceSpriteRenderer.color = currentColor;
+            }
+        }
+    }
+
+    private float getAlpha()
     {
         const float FREQUENCY_MODIFIER = 8f;
         const float AMPLITUDE = .4f;
         const float VERTICAL_SHIFT = .6f;
 
         float lPingTimeTracker = VERTICAL_SHIFT + Mathf.Sin(Time.time * FREQUENCY_MODIFIER) * AMPLITUDE;
+        return lPingTimeTracker;
+    }
 
+    private string logSpriteRenderers()
+    {
+        string log = "";
 
-        //Debug.Log(pPieceSpriteRenderers[0]);
-
-        if (pPieceSpriteRenderers[0] != null)
+        foreach (SpriteRenderer s in mPieceSpriteRenderers)
         {
-            foreach (SpriteRenderer lPieceSpriteRenderer in pPieceSpriteRenderers)
-            {
-                if (lPieceSpriteRenderer != null)
-                {
-                    lPieceSpriteRenderer.color = new Color(lPieceSpriteRenderer.color.r, lPieceSpriteRenderer.color.g, lPieceSpriteRenderer.color.b, lPingTimeTracker);
-                }
-            }
+            log += s.gameObject.name + ", ";
         }
+
+        return log;
     }
 
     // Rotate the template when right click
-
     public void rotate()
     {
         const float XY_ROTATION_AMOUNT = 0f;
