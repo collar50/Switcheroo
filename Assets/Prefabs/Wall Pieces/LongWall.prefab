@@ -20,12 +20,12 @@ GameObject:
   m_Component:
   - component: {fileID: 4115170523834538}
   - component: {fileID: 212959398311907670}
+  - component: {fileID: 61360188158692794}
   - component: {fileID: 114716800794719774}
   - component: {fileID: 114028640286616516}
-  - component: {fileID: 61360188158692794}
   m_Layer: 0
   m_Name: LongWall
-  m_TagString: LongWall
+  m_TagString: Long Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

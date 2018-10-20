@@ -52,7 +52,7 @@ public abstract class BaseActive : MonoBehaviour
 		    alreadyFiredOnce || !alreadyFiredOnce) {
 			alreadyFiredOnce = true;
 			if (stats.CurrentValue () [1] >= currentManaCost) {
-				stats.DecrementCurrentValue (1, currentManaCost);
+				//stats.DecrementCurrentValue (1, currentManaCost);
 				startTime = Time.time;
 				currentlyActive = true;
 				image.fillAmount = 1f;

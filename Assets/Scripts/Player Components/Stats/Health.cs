@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [DisallowMultipleComponent]
-public class Health : StatBase {
-
+public class Health : StatBase
+{
+    [HideInInspector][Range(0, 2)] public int tab;
     // Use this for initialization
 
     private void Awake()
@@ -23,5 +22,4 @@ public class Health : StatBase {
             // Destroy player
         }
     }
-	
 }
