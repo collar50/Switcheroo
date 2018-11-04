@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e840376d1bfbf554987b46670f845493, type: 3}
+  m_Name: Lines
+  m_EditorClassIdentifier: 
+  name: Lines
+  description: "fasf\u200B"
+  structure: {fileID: 4757897916818540, guid: 6156f6c0a6f11b24caf3fdc6eddfda16, type: 2}

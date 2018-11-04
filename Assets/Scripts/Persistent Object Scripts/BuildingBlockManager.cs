@@ -51,6 +51,20 @@ public class BuildingBlockManager : MonoBehaviour
         }
     }
 
+    public Transform searchBuiltInPrefabs(string pTag)
+    {
+        // @TODO Linear search
+        foreach (Transform t in BuiltInPrefabs)
+        {
+            if (t.gameObject.tag == pTag)
+            {
+                return t;
+            }
+        }
+
+        return null;
+    }
+
     public void addBuildingBlock(Transform pNewBuildingBlock, string pName)
     {
         addBuildingBlock(pNewBuildingBlock, pName, Positions, Rotations, Tags, Names);

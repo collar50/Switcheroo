@@ -5353,6 +5353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mNewLevelName: {fileID: 320306591}
+  mDescription: {fileID: 1549991103}
 --- !u!1 &1075927651
 GameObject:
   m_ObjectHideFlags: 0

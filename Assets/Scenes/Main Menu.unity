@@ -912,7 +912,7 @@ MonoBehaviour:
   mBlackScreen: {fileID: 1691090678}
   mWheelSegmentTracker: {fileID: 413262927}
   mSceneNames:
-  - Single Player Lobby
+  - Single Player Arena
   - Main Menu
   - Player Build
   - Level Builder
@@ -1614,8 +1614,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rendTex: {fileID: 8400000, guid: 493284e242ec8f44188b59582bce05a6, type: 2}
-  builtInLevelList: []
-  builtInPreviewImageList: []
+  builtInLevels:
+  - {fileID: 11400000, guid: 74a8e3b4b902d0f4db2f8bab56c729c8, type: 2}
+  - {fileID: 11400000, guid: 55caca8eb0170294fbc508d05c756a32, type: 2}
+  - {fileID: 11400000, guid: 3ab5da2f5ac4ddc4581ee9cdc3bb1719, type: 2}
+  currentLevelPositions: []
+  currentLevelPrefabs: []
+  currentLevel: 0
 --- !u!1 &1375727406
 GameObject:
   m_ObjectHideFlags: 0

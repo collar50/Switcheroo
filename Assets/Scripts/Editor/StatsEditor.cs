@@ -25,16 +25,26 @@ public class StatsEditor : Editor {
                 stats.mHealthDisplay = (Image)EditorGUILayout.ObjectField("Health Display: ", stats.mHealthDisplay, typeof(Image), true);
                 displayStatInfo(stats.mCurrentHealth, stats.mMaxHealth);
                 displayHealthButtons();
+                GUILayout.Label("Health Wall Regen: " + stats.mHealthWall);
+                GUILayout.Label("Health Vamp: " + stats.mHealthVamp);
                 break;
             case 1:
                 stats.mManaDisplay = (Image)EditorGUILayout.ObjectField("Mana Display: ", stats.mManaDisplay, typeof(Image), true);
                 displayStatInfo(stats.mCurrentMana, stats.mMaxMana);
                 displayManaButtons();
+                GUILayout.Label("Mana Wall Regen: " + stats.mManaWall);
+                GUILayout.Label("Mana Vamp: " + stats.mManaVamp);
                 break;
             case 2:
                 stats.mDSDisplay = (Image)EditorGUILayout.ObjectField("D-S Display: ", stats.mDSDisplay, typeof(Image), true);
                 displayStatInfo(stats.mCurrentDS, stats.mMaxDS);
                 displayDSButtons();
+
+                GUILayout.Label("Damage Wall Regen: " + stats.mDamageWall);
+                GUILayout.Label("Damage Vamp: " + stats.mDamageVamp);
+
+                GUILayout.Label("Switch Wall Regen: " + stats.mSwitchWall);
+                GUILayout.Label("Switch Vamp: " + stats.mSwitchVamp);
                 break;
         }
     }
